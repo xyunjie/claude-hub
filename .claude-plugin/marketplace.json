@@ -1,0 +1,19 @@
+{
+  "name": "claude-hub",
+  "owner": {
+    "name": "xyunjie"
+  },
+  "metadata": {
+    "description": "A themeable real-time statusline HUD for Claude Code",
+    "version": "0.1.0"
+  },
+  "plugins": [
+    {
+      "name": "claude-hub",
+      "source": "./",
+      "description": "Real-time statusline: context, usage limits, session time and cost, git, tools, agents and todos, with color themes.",
+      "category": "monitoring",
+      "tags": ["hud", "statusline", "monitoring", "themes"]
+    }
+  ]
+}

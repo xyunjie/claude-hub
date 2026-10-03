@@ -1,0 +1,17 @@
+{
+  "name": "claude-hub",
+  "description": "A themeable real-time statusline HUD for Claude Code: context, usage limits, session time and cost, git, tools, agents and todos",
+  "version": "0.1.0",
+  "author": {
+    "name": "xyunjie",
+    "url": "https://github.com/xyunjie"
+  },
+  "commands": [
+    "./commands/setup.md",
+    "./commands/configure.md"
+  ],
+  "homepage": "https://github.com/xyunjie/claude-hub",
+  "repository": "https://github.com/xyunjie/claude-hub",
+  "license": "MIT",
+  "keywords": ["hud", "statusline", "monitoring", "context", "themes", "claude-code"]
+}
