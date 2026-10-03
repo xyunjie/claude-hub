@@ -101,10 +101,10 @@ function sliceToWidth(str: string, width: number): string {
   return result;
 }
 
-function truncateToWidth(str: string, width: number): string {
+export function truncateToWidth(str: string, width: number, ellipsis = '...'): string {
   if (width <= 0 || visibleWidth(str) <= width) return str;
-  const suffix = width >= 3 ? '...' : '.'.repeat(width);
-  const kept = sliceToWidth(str, width - suffix.length);
+  const suffix = width > textWidth(ellipsis) ? ellipsis : '.'.repeat(width);
+  const kept = sliceToWidth(str, width - textWidth(suffix));
   // Cutting inside an OSC 8 link without closing it would underline the rest of the line.
   const open = [...kept.matchAll(OSC8)].at(-1)?.[1];
   return `${kept}${open ? OSC8_CLOSE : ''}${suffix}${RESET}`;

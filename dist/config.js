@@ -2,6 +2,7 @@ import * as fs from 'node:fs';
 import * as os from 'node:os';
 import * as path from 'node:path';
 import { createDebug } from './debug.js';
+import { ICON_TIERS } from './icons.js';
 import { LANGUAGES } from './i18n/index.js';
 import { claudeConfigDir, hubDir } from './paths.js';
 import { BAR_STYLE_NAMES, COLOR_ROLES, THEME_NAMES, isColorValue, } from './themes.js';
@@ -19,6 +20,8 @@ export const PROJECT_SEGMENTS = [
     'model', 'project', 'sessionName', 'version', 'extra', 'duration', 'cost', 'lines', 'speed', 'auth',
 ];
 const LAYOUTS = ['expanded', 'compact'];
+export const STYLES = ['dashboard', 'lean', 'powerline', 'capsule', 'boxed', 'bracket'];
+const BAR_COLORS = ['band', 'gradient'];
 const PATH_LEVELS = [1, 2, 3, 'full'];
 const CONTEXT_VALUES = ['percent', 'tokens', 'remaining', 'both'];
 const USAGE_VALUES = ['percent', 'remaining'];
@@ -29,12 +32,16 @@ const TIME_FORMATS = ['relative', 'absolute', 'both'];
 const POSITIONS = ['first', 'last'];
 export const DEFAULT_CONFIG = {
     language: 'en',
-    theme: 'default',
-    barStyle: 'block',
+    theme: 'claude',
+    style: 'dashboard',
+    icons: 'unicode',
+    barStyle: 'auto',
+    barColor: 'gradient',
     lineLayout: 'expanded',
     showSeparators: false,
     pathLevels: 1,
     maxWidth: null,
+    reserveWidth: 0,
     elementOrder: [...ELEMENTS],
     projectLineOrder: [],
     gitStatus: {
@@ -65,7 +72,8 @@ export const DEFAULT_CONFIG = {
         usageValue: 'percent',
         usageBarEnabled: true,
         usageCompact: false,
-        usagePace: false,
+        usagePace: true,
+        modelColors: true,
         showResetLabel: true,
         usageThreshold: 0,
         sevenDayThreshold: 80,
@@ -167,7 +175,11 @@ const colors = (value) => {
 const RULES = {
     language: oneOf(LANGUAGES),
     theme: oneOf(THEME_NAMES),
+    style: oneOf(STYLES),
+    icons: oneOf(ICON_TIERS),
+    reserveWidth: (value, fallback) => (Number.isInteger(value) && value >= 0 ? Math.min(value, 200) : fallback),
     barStyle: oneOf(BAR_STYLE_NAMES),
+    barColor: oneOf(BAR_COLORS),
     lineLayout: oneOf(LAYOUTS),
     pathLevels: oneOf(PATH_LEVELS),
     maxWidth: (value) => (isNumber(value) && value > 0 ? Math.min(Math.floor(value), MAX_TERMINAL_WIDTH) : null),

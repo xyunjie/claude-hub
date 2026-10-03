@@ -1,19 +1,29 @@
 import { getTerminalWidth } from '../utils/terminal.js';
-import { wrapToWidth } from './ansi.js';
 import { RESET } from './colors.js';
-import { createFrame, type RenderContext } from './frame.js';
+import { createFrame, type Frame, type RenderContext } from './frame.js';
+import { dashboardLines } from './dashboard.js';
 import { compactLines, expandedLines } from './layouts.js';
 
 export type { RenderContext };
 
-/** The lines the HUD prints, wrapped to the terminal width when it is known. */
+// The boxed style hangs every line off a frame: ╭─ first, ├─ middle, ╰─ last.
+function frameLines(f: Frame, lines: string[]): string[] {
+  const [first, middle, last, lone] = f.icons.frame;
+  if (lines.length === 1) return [`${f.paint.label(lone)}${lines[0]}`];
+  return lines.map((line, i) => {
+    const prefix = i === 0 ? first : i === lines.length - 1 ? last : middle;
+    return `${f.paint.label(prefix)}${line}`;
+  });
+}
+
+/** The lines the HUD prints, fitted to the terminal width when it is known. */
 export function renderLines(ctx: RenderContext, columns: number | null, now: number): string[] {
   const frame = createFrame(ctx, columns, now);
-  const lines = ctx.config.lineLayout === 'compact' ? compactLines(frame) : expandedLines(frame);
-  return lines
-    .flatMap((line) => line.split('\n'))
-    .flatMap((line) => wrapToWidth(line, frame.width ?? 0))
-    .map((line) => `${RESET}${line}`);
+  const lines = (ctx.config.lineLayout === 'compact' ? compactLines(frame)
+    : ctx.config.style === 'dashboard' ? dashboardLines(frame)
+      : expandedLines(frame)).filter(Boolean);
+  const framed = ctx.config.style === 'boxed' ? frameLines(frame, lines) : lines;
+  return framed.map((line) => `${RESET}${line}`);
 }
 
 export function render(ctx: RenderContext): void {

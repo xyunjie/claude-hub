@@ -21,7 +21,9 @@ function needsTranscript(config, stdin) {
     const d = config.display;
     return d.showTools || d.showSkills || d.showMcp || d.showAgents || d.showTodos || d.showConfigCounts
         || d.showSessionTokens || d.showCompactions || d.showSessionStartDate || d.showLastResponseAt
-        || d.showEffortLevel || d.modelSource !== 'stdin' || isContextUnreported(stdin);
+        || d.showEffortLevel || d.modelSource !== 'stdin' || isContextUnreported(stdin)
+        // The dashboard's token cell falls back to transcript totals.
+        || (config.style === 'dashboard' && typeof stdin.context_window?.total_input_tokens !== 'number');
 }
 export async function main() {
     if (isDisabled())

@@ -4,73 +4,80 @@ import { t } from '../i18n/index.js';
 import { formatBytes } from '../utils/format.js';
 import { fileHref, hyperlink } from '../utils/hyperlinks.js';
 import { cleanText, sanitize } from '../utils/sanitize.js';
-import { barLabel } from './bars.js';
 import { usageRole } from './colors.js';
-import { configCountParts } from './parts.js';
+import { configCountSegments } from './parts.js';
+import { segment } from './segments.js';
 import { formatAgo, formatClock } from './time.js';
 /** Config counts, output style, and failing MCP servers. */
-export function environmentLine(f) {
+export function environmentSegments(f) {
     const d = f.config.display;
-    const parts = configCountParts(f);
+    const segments = configCountSegments(f);
     const style = d.showOutputStyle ? cleanText(f.stdin.output_style?.name, 40) : undefined;
-    if (style)
-        parts.push(f.paint.label(`${t('label.style')}: ${style}`));
+    if (style) {
+        const text = `${t('label.style')}: ${style}`;
+        segments.push(segment('environment', f.paint.label(text), text, 'label', 3));
+    }
     const failing = d.showConfigCounts || d.showMcp ? f.transcript.mcpErrors : [];
     if (failing.length > 0) {
         const overflow = failing.length > 3 ? ` +${failing.length - 3}` : '';
-        parts.push(f.paint.critical(`⚠ ${failing.slice(0, 3).join(', ')}${overflow}`));
+        const text = `${f.icons.warn} ${failing.slice(0, 3).join(', ')}${overflow}`;
+        segments.push(segment('environment', f.paint.critical(text), text, 'critical', 1));
     }
-    return parts.length > 0 ? parts.join(' | ') : null;
+    return segments;
 }
 const TTL_SECONDS = { '5m': 300, '1h': 3600 };
 // Shows the expiry time rather than a countdown: between turns the statusline isn't
 // repainted, so a countdown would freeze.
-export function promptCacheLine(f) {
+export function promptCacheSegment(f) {
     const cache = f.stdin.prompt_cache;
     if (!f.config.display.showPromptCache || !cache?.caching_observed)
         return null;
     const expiresAt = typeof cache.expires_at === 'number' ? cache.expires_at * 1000 : 0;
     const remaining = cache.warm ? expiresAt - f.now : 0;
-    let value;
+    const label = f.icons.cache || `${t('label.promptCache')} `;
     if (remaining <= 0) {
-        value = f.paint.label(`⏱ ${t('status.expired')}`);
+        const value = t('status.expired');
+        return segment('promptCache', `${f.paint.label(t('label.promptCache'))} ${f.paint.label(value)}`, `${label}${value}`, 'label', 2);
     }
-    else {
-        const warnMs = Math.max(60, Math.floor((TTL_SECONDS[cache.ttl ?? ''] ?? 300) / 5)) * 1000;
-        const until = `⏱ ${formatClock(new Date(expiresAt), new Date(f.now), 'format.until')}`;
-        value = remaining <= warnMs ? f.paint.warning(until) : f.paint.context(until);
-    }
-    return `${f.paint.label(t('label.promptCache'))} ${value}`;
+    const warnMs = Math.max(60, Math.floor((TTL_SECONDS[cache.ttl ?? ''] ?? 300) / 5)) * 1000;
+    const value = formatClock(new Date(expiresAt), new Date(f.now), 'format.until');
+    const role = remaining <= warnMs ? 'warning' : 'context';
+    return segment('promptCache', `${f.paint.label(t('label.promptCache'))} ${f.paint[role](value)}`, `${label}${value}`, role, 2);
 }
-export function cacheHitRateLine(f) {
+export function cacheHitSegment(f) {
     const ratio = f.stdin.prompt_cache?.hit_ratio;
     if (!f.config.display.showCacheHitRate || typeof ratio !== 'number' || !Number.isFinite(ratio))
         return null;
-    return `${f.paint.label(t('label.cacheHit'))} ${Math.min(100, Math.max(0, ratio * 100)).toFixed(1)}%`;
+    const value = `${Math.min(100, Math.max(0, ratio * 100)).toFixed(1)}%`;
+    return segment('cacheHitRate', `${f.paint.label(t('label.cacheHit'))} ${value}`, `${t('label.cacheHit')} ${value}`, 'label', 2);
 }
 const pad = (n) => String(n).padStart(2, '0');
-/** `Started: 2026-10-01 11:00 │ Last reply: 1m ago`. */
-export function sessionTimeLine(f) {
+/** `Started: 2026-10-01 11:00`, `Last reply: 1m ago`. */
+export function sessionTimeSegments(f) {
     const d = f.config.display;
-    const parts = [];
+    const segments = [];
     const start = f.transcript.sessionStart;
     if (d.showSessionStartDate && start) {
         const date = `${start.getFullYear()}-${pad(start.getMonth() + 1)}-${pad(start.getDate())} ${pad(start.getHours())}:${pad(start.getMinutes())}`;
-        parts.push(`${f.paint.label(`${t('label.started')}:`)} ${date}`);
+        segments.push(segment('sessionTime', `${f.paint.label(`${t('label.started')}:`)} ${date}`, `${t('label.started')} ${date}`, 'label', 3));
     }
     const last = f.transcript.lastResponseAt;
-    if (d.showLastResponseAt && last)
-        parts.push(`${f.paint.label(`${t('label.lastReply')}:`)} ${formatAgo(f.now - last.getTime())}`);
-    return parts.length > 0 ? parts.join(' │ ') : null;
+    if (d.showLastResponseAt && last) {
+        const ago = formatAgo(f.now - last.getTime());
+        segments.push(segment('sessionTime', `${f.paint.label(`${t('label.lastReply')}:`)} ${ago}`, `${t('label.lastReply')} ${ago}`, 'label', 3));
+    }
+    return segments;
 }
 /** Approximate system RAM. */
-export function memoryLine(f, align = false) {
+export function memorySegment(f) {
     const memory = f.memory;
     if (!f.config.display.showMemoryUsage || !memory)
         return null;
     const role = usageRole(memory.usedPercent);
-    return `${barLabel(f, 'label.ram', align)} ${f.paint.bar(memory.usedPercent, f.barWidth, role)} `
-        + `${formatBytes(memory.usedBytes)} / ${formatBytes(memory.totalBytes)} (${f.paint[role](`${memory.usedPercent}%`)})`;
+    const amounts = `${formatBytes(memory.usedBytes)} / ${formatBytes(memory.totalBytes)}`;
+    const text = `${f.paint.label(t('label.ram'))} ${f.paint.bar(memory.usedPercent, f.barWidth, role)} ${amounts} (${f.paint[role](`${memory.usedPercent}%`)})`;
+    const plain = `${f.icons.ram || `${t('label.ram')} `}${f.paint.plainBar(memory.usedPercent, f.barWidth)} ${memory.usedPercent}%`;
+    return segment('memory', text, plain, role, 2);
 }
 function insideCwd(cwd, candidate) {
     const resolved = path.resolve(cwd, candidate);
@@ -108,9 +115,9 @@ export function gitFilesLine(f) {
         const name = color(sanitize(file.basename));
         let entry = `${color(prefix)}${resolved ? hyperlink(fileHref(resolved), name) : name}`;
         const diff = file.lineDiff;
-        const diffParts = diff ? [diff.added > 0 ? paint.success(`+${diff.added}`) : '', diff.deleted > 0 ? paint.critical(`-${diff.deleted}`) : ''].filter(Boolean) : [];
-        if (diffParts.length > 0)
-            entry += paint.label('(') + diffParts.join(' ') + paint.label(')');
+        const parts = diff ? [diff.added > 0 ? paint.success(`+${diff.added}`) : '', diff.deleted > 0 ? paint.critical(`-${diff.deleted}`) : ''].filter(Boolean) : [];
+        if (parts.length > 0)
+            entry += paint.label('(') + parts.join(' ') + paint.label(')');
         return entry;
     });
     if (sorted.length > MAX_FILES)

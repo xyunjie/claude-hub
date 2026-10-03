@@ -11,7 +11,7 @@ test('invalid values fall back and unknown keys drop', () => {
     theme: 'nope', language: 'fr', pathLevels: 9, bogus: 1,
     display: { showTools: 'yes', contextWarningThreshold: 150, mergeGroups: [['context']] },
   });
-  assert.equal(config.theme, 'default');
+  assert.equal(config.theme, 'claude');
   assert.equal(config.language, 'en');
   assert.equal(config.pathLevels, 1);
   assert.equal('bogus' in config, false);

@@ -6,14 +6,15 @@ claude-hub is a Claude Code status line plugin: Claude Code pipes session JSON t
 
 ```bash
 npm test          # builds dist/, then node --test
-npm run demo      # every theme with sample data
+npm run preview   # every style × theme with sample data
 node scripts/setup.mjs install --dev   # run this checkout as your status line
 ```
 
 ## Layout
 
 - `src/index.ts` gathers data in parallel (only what enabled elements need); all I/O happens there and in the collector modules (`transcript.ts`, `git.ts`, `config-counts.ts`, `memory.ts`, `speed.ts`, `daily-cost.ts`, `auth.ts`).
-- `src/render/` is pure: `frame.ts` samples clock, width, and palette once; `parts.ts`, `bars.ts`, `lines.ts`, `activity.ts` build pieces; `layouts.ts` arranges them; `ansi.ts` measures and wraps.
+- `src/render/` is pure: `frame.ts` samples clock, width, palette, and icons once. `parts.ts`, `bars.ts`, `lines.ts` build `Segment`s (lean `text` + block `plain` + color `role` + drop `priority`); `segments.ts` draws a row in each `style` and fits it to the width; `layouts.ts` arranges rows; `dashboard.ts` is the default style's own layout (identity row + aligned grid of bar/text cells); activity rows (`activity.ts`) stay plain text.
+- `src/icons.ts`: glyph tiers (`unicode`, `nerd`, `ascii`). Never hard-code a glyph in a renderer; add it to `Icons`.
 - `src/config.ts`: `DEFAULT_CONFIG` is the schema, `RULES` validates non-boolean keys. Keep keys compatible with claude-hud where they overlap.
 - `src/themes.ts`: palettes, bar styles, color parsing.
 

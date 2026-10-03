@@ -7,12 +7,12 @@ const toolName = (name) => {
     const safe = sanitize(name);
     return /^mcp__.+__.+$/.test(safe) ? safe.split('__').pop() ?? safe : safe;
 };
-function shortenPath(target, max = 20) {
+function shortenPath(target, ellipsis, max = 20) {
     const normalized = sanitize(target).replace(/\\/g, '/');
     if (normalized.length <= max)
         return normalized;
     const file = normalized.split('/').pop() || normalized;
-    return file.length >= max ? `${file.slice(0, max - 1)}…` : `…/${file}`;
+    return file.length >= max ? `${file.slice(0, max - ellipsis.length)}${ellipsis}` : `${ellipsis}/${file}`;
 }
 /** `◐ Edit: auth.ts | ✓ Read ×3 | ✓ Grep ×2`: the two newest running tools, then completed counts. */
 function toolsLine(f) {
@@ -23,7 +23,7 @@ function toolsLine(f) {
     const parts = tools
         .filter((tool) => tool.status === 'running')
         .slice(-2)
-        .map((tool) => `${paint.running('◐')} ${paint.tool(toolName(tool.name))}${tool.target ? paint.label(`: ${shortenPath(tool.target)}`) : ''}`);
+        .map((tool) => `${paint.running(f.icons.running)} ${paint.tool(toolName(tool.name))}${tool.target ? paint.label(`: ${shortenPath(tool.target, f.icons.ellipsis)}`) : ''}`);
     const counts = new Map();
     for (const tool of tools) {
         if (tool.status === 'running')
@@ -37,12 +37,12 @@ function toolsLine(f) {
     const sorted = [...counts].sort((a, b) => b[1].done - a[1].done);
     const visible = maxVisible === 0 ? sorted : sorted.slice(0, maxVisible);
     for (const [name, { done, errors }] of visible) {
-        const icon = errors === done ? paint.critical('✗') : paint.success('✓');
-        parts.push(`${icon} ${toolName(name)} ${paint.label(`×${done}`)}`);
+        const icon = errors === done ? paint.critical(f.icons.error) : paint.success(f.icons.done);
+        parts.push(`${icon} ${toolName(name)} ${paint.label(`${f.config.icons === 'ascii' ? 'x' : '×'}${done}`)}`);
     }
     if (sorted.length > visible.length)
         parts.push(paint.label(t('format.more', { count: sorted.length - visible.length })));
-    return parts.length > 0 ? parts.join(' | ') : null;
+    return parts.length > 0 ? parts.join(` ${paint.label(f.icons.separator.trim())} `) : null;
 }
 /** `✓ Skills (5): a, b, c, d, +1 more`. */
 function namesLine(f, title, names, maxVisible) {
@@ -52,7 +52,7 @@ function namesLine(f, title, names, maxVisible) {
     const shown = (maxVisible === 0 ? names : names.slice(0, maxVisible)).map((name) => paint.tool(name));
     if (names.length > shown.length)
         shown.push(paint.label(t('format.more', { count: names.length - shown.length })));
-    return `${paint.success('✓')} ${title} ${paint.label(`(${names.length})`)}: ${shown.join(', ')}`;
+    return `${paint.success(f.icons.done)} ${title} ${paint.label(`(${names.length})`)}: ${shown.join(', ')}`;
 }
 const MAX_AGENTS = 3;
 const MAX_RECENT = 2;
@@ -83,9 +83,9 @@ function agentsLine(f) {
     if (shown.length === 0)
         return null;
     return shown.map((agent) => {
-        const icon = agent.status === 'running' ? paint.running('◐') : paint.success('✓');
+        const icon = agent.status === 'running' ? paint.running(f.icons.running) : paint.success(f.icons.done);
         const model = shortModel(agent.model);
-        const description = truncate(agent.description?.trim(), 40);
+        const description = truncate(agent.description?.trim(), 40, f.icons.ellipsis);
         const elapsed = formatSpan(Math.max(0, (agent.endTime?.getTime() ?? f.now) - agent.startTime.getTime()));
         return `${icon} ${paint.agent(agent.type)}${model ? ` ${paint.label(`[${model}]`)}` : ''}`
             + `${description ? paint.label(`: ${description}`) : ''} ${paint.label(`(${elapsed})`)}`;
@@ -101,8 +101,8 @@ function todosLine(f) {
     const progress = paint.label(`(${done}/${todos.length})`);
     const current = todos.find((todo) => todo.status === 'in_progress');
     if (current)
-        return `${paint.running('▸')} ${truncate(current.content, 50)} ${progress}`;
-    return done === todos.length ? `${paint.success('✓')} ${t('status.allTodosDone')} ${progress}` : null;
+        return `${paint.running(f.icons.todo)} ${truncate(current.content, 50, f.icons.ellipsis)} ${progress}`;
+    return done === todos.length ? `${paint.success(f.icons.done)} ${t('status.allTodosDone')} ${progress}` : null;
 }
 export function activityLine(f, element) {
     const d = f.config.display;

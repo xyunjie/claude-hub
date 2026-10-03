@@ -2,6 +2,7 @@ import * as fs from 'node:fs';
 import * as os from 'node:os';
 import * as path from 'node:path';
 import { createDebug } from './debug.js';
+import { ICON_TIERS, type IconTier } from './icons.js';
 import { LANGUAGES, type Language } from './i18n/index.js';
 import { claudeConfigDir, hubDir } from './paths.js';
 import type { ModelFormat, ModelSource } from './stdin.js';
@@ -27,6 +28,8 @@ export const PROJECT_SEGMENTS = [
 ] as const;
 
 const LAYOUTS = ['expanded', 'compact'] as const;
+export const STYLES = ['dashboard', 'lean', 'powerline', 'capsule', 'boxed', 'bracket'] as const;
+const BAR_COLORS = ['band', 'gradient'] as const;
 const PATH_LEVELS = [1, 2, 3, 'full'] as const;
 const CONTEXT_VALUES = ['percent', 'tokens', 'remaining', 'both'] as const;
 const USAGE_VALUES = ['percent', 'remaining'] as const;
@@ -39,6 +42,7 @@ const POSITIONS = ['first', 'last'] as const;
 export type HubElement = typeof ELEMENTS[number];
 export type ProjectSegment = typeof PROJECT_SEGMENTS[number];
 export type Layout = typeof LAYOUTS[number];
+export type Style = typeof STYLES[number];
 export type PathLevels = typeof PATH_LEVELS[number];
 export type ContextValue = typeof CONTEXT_VALUES[number];
 export type UsageValue = typeof USAGE_VALUES[number];
@@ -48,11 +52,17 @@ export type TimeFormat = typeof TIME_FORMATS[number];
 export interface HubConfig {
   language: Language;
   theme: ThemeName;
-  barStyle: BarStyle;
+  style: Style;
+  icons: IconTier;
+  barStyle: BarStyle | 'auto';
+  /** `band` colors a whole bar by its level; `gradient` shades each cell low → high. */
+  barColor: typeof BAR_COLORS[number];
   lineLayout: Layout;
   showSeparators: boolean;
   pathLevels: PathLevels;
   maxWidth: number | null;
+  /** Columns left free at the right edge, for Claude Code's own notices. */
+  reserveWidth: number;
   elementOrder: HubElement[];
   projectLineOrder: ProjectSegment[];
   gitStatus: {
@@ -84,6 +94,8 @@ export interface HubConfig {
     usageBarEnabled: boolean;
     usageCompact: boolean;
     usagePace: boolean;
+    /** Color the model by family (Fable shimmers, Opus accent, Sonnet muted) and effort by level. */
+    modelColors: boolean;
     showResetLabel: boolean;
     usageThreshold: number;
     sevenDayThreshold: number;
@@ -124,12 +136,16 @@ export interface HubConfig {
 
 export const DEFAULT_CONFIG: HubConfig = {
   language: 'en',
-  theme: 'default',
-  barStyle: 'block',
+  theme: 'claude',
+  style: 'dashboard',
+  icons: 'unicode',
+  barStyle: 'auto',
+  barColor: 'gradient',
   lineLayout: 'expanded',
   showSeparators: false,
   pathLevels: 1,
   maxWidth: null,
+  reserveWidth: 0,
   elementOrder: [...ELEMENTS],
   projectLineOrder: [],
   gitStatus: {
@@ -160,7 +176,8 @@ export const DEFAULT_CONFIG: HubConfig = {
     usageValue: 'percent',
     usageBarEnabled: true,
     usageCompact: false,
-    usagePace: false,
+    usagePace: true,
+    modelColors: true,
     showResetLabel: true,
     usageThreshold: 0,
     sevenDayThreshold: 80,
@@ -266,7 +283,11 @@ const colors: Rule = (value) => {
 const RULES: Record<string, Rule> = {
   language: oneOf(LANGUAGES),
   theme: oneOf(THEME_NAMES),
+  style: oneOf(STYLES),
+  icons: oneOf(ICON_TIERS),
+  reserveWidth: (value, fallback) => (Number.isInteger(value) && (value as number) >= 0 ? Math.min(value as number, 200) : fallback),
   barStyle: oneOf(BAR_STYLE_NAMES),
+  barColor: oneOf(BAR_COLORS),
   lineLayout: oneOf(LAYOUTS),
   pathLevels: oneOf(PATH_LEVELS),
   maxWidth: (value) => (isNumber(value) && value > 0 ? Math.min(Math.floor(value), MAX_TERMINAL_WIDTH) : null),
