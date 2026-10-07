@@ -27,6 +27,7 @@ export const zhHant = {
     'status.expired': '已過期',
     'format.resets': '重置於',
     'format.resetsIn': '剩餘',
+    'format.renews': '續費',
     'format.at': '{time}',
     'format.until': '至 {time}',
     'format.in': '輸入',

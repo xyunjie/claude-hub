@@ -1,14 +1,16 @@
 import type { PathLevels } from '../config.js';
 import { t } from '../i18n/index.js';
 import { effortLevel, formatModelName, modelName, providerLabel, sessionCostUsd } from '../stdin.js';
-import { formatElapsed, formatTokens, formatUsd } from '../utils/format.js';
+import { formatCountdown, formatElapsed, formatTokens, formatUsd } from '../utils/format.js';
 import { fileHref, hyperlink } from '../utils/hyperlinks.js';
 import { cleanText, sanitize } from '../utils/sanitize.js';
 import type { Frame } from './frame.js';
 import { styledEffort, styledModel } from './model-style.js';
 import { segment, type Segment } from './segments.js';
+import { nextMonthlyRenewal } from './time.js';
 
 const BRANCH_MAX = 32;
+const DAY_MS = 24 * 60 * 60 * 1000;
 
 /** The effort's symbol and level as configured; either may be empty. */
 function effortParts(f: Frame): { symbol: string; level: string } | null {
@@ -181,14 +183,24 @@ export function speedSegment(f: Frame): Segment | null {
   return segment('speed', f.paint.label(`${t('format.out')}: ${value}`), `${f.icons.speed}${value}`, 'label', 3);
 }
 
-/** `Claude Max 20x · alice`. */
-export function authSegment(f: Frame): Segment | null {
+/** `Claude Max 20x · alice · renews ~23d`; `short` drops the "Claude " prefix. Empty when nothing is on. */
+export function planText(f: Frame, short = false): string {
   const d = f.config.display;
-  if (!f.auth) return null;
-  const parts = [d.showAuth ? f.auth.method : null, d.showAuthUser ? f.auth.user : null].filter(Boolean);
-  if (parts.length === 0) return null;
-  const text = parts.join(f.icons.dot);
-  return segment('auth', f.paint.label(text), text, 'label', 4);
+  if (!f.auth) return '';
+  const method = short ? f.auth.method?.replace(/^Claude /, '') : f.auth.method;
+  let renewal: string | null = null;
+  if (d.showRenewal && f.auth.subscribedAt) {
+    const remaining = nextMonthlyRenewal(f.auth.subscribedAt, f.now).getTime() - f.now;
+    // Whole days are as precise as an estimate gets, until the last day.
+    const left = remaining >= DAY_MS ? `${Math.ceil(remaining / DAY_MS)}d` : formatCountdown(remaining).replace(/ /g, '');
+    renewal = `${t('format.renews')} ~${left}`;
+  }
+  return [d.showAuth ? method : null, d.showAuthUser ? f.auth.user : null, renewal].filter(Boolean).join(f.icons.dot);
+}
+
+export function authSegment(f: Frame): Segment | null {
+  const text = planText(f);
+  return text ? segment('auth', f.paint.label(text), text, 'label', 4) : null;
 }
 
 export function customSegment(f: Frame, position: 'first' | 'last'): Segment | null {

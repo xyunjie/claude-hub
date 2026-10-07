@@ -66,7 +66,7 @@ export async function main(): Promise<void> {
         ? getCostTotals(stdin, { allowRouted: d.showRoutedCost, sevenDayResetAt: usage?.sevenDayResetAt ?? null })
         : null,
       speed: d.showSpeed ? getOutputSpeed(stdin) : null,
-      auth: d.showAuth || d.showAuthUser ? readAuthInfo() : null,
+      auth: d.showAuth || d.showAuthUser || d.showRenewal ? readAuthInfo() : null,
     });
   } catch (error) {
     console.log('[claude-hub] Error:', error instanceof Error ? error.message : 'Unknown error');

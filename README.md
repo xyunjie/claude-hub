@@ -21,7 +21,7 @@ Style is the shape, theme is the palette, and icons pick the glyph set; mix them
 
 | `style` | Looks like (unicode icons) |
 |---|---|
-| `dashboard` (default) | an identity row (`◆ model effort │ owner/repo ⎇ branch ✓`), then an aligned grid: `ctx`/`5h`/`7d` gradient line bars (a thin `┼` marks the even pace) with dimmed details and the usage projection, `tok ↑in ↓out cache %`, `cost`, `time`. Narrow terminals drop `tok`, then move cost/time beside the bars |
+| `dashboard` (default) | an identity row (`◆ model effort │ owner/repo ⎇ branch ✓`), then an aligned grid: `ctx`/`5h`/`7d` gradient line bars (a thin `┼` marks the even pace) with dimmed details and the usage projection, `tok ↑in ↓out cache %`, `cost`, `time`, and the plan with its estimated renewal (`showAuth`, `showRenewal`). Narrow terminals drop `tok`, then move cost/time beside the bars |
 | `lean` | `[Opus 5.5] │ app git:(main*) │ ⏱ 1h 13m │ $2.48` |
 | `powerline` | colored blocks; with `icons: "nerd"` they join with `` arrows |
 | `capsule` | one colored pill per segment; rounded `` `` caps with `icons: "nerd"` |
@@ -146,7 +146,8 @@ Run `/claude-hub:configure`, ask Claude ("use the nord theme", "show tool activi
 | `showLinesChanged` | `false` | `+312 -48` lines this session |
 | `showSpeed` | `false` | output tokens per second |
 | `showSessionName` / `showClaudeCodeVersion` | `false` | |
-| `showAuth` / `showAuthUser` | `false` | plan and account |
+| `showAuth` / `showAuthUser` | `false` | plan (Pro, Max 5x, Max 20x) and account; on the usage row in the dashboard |
+| `showRenewal` | `false` | `renews ~23d`: days to the next monthly anniversary of the subscription start. An estimate: annual billing, plan changes and cancellations aren't recorded locally |
 | `showConfigCounts` / `showOutputStyle` | `false` | CLAUDE.md, rules, MCPs, hooks counts; output style |
 | `showPromptCache` / `showCacheHitRate` | `false` | prompt cache expiry and hit rate |
 | `showMemoryUsage` | `false` | system RAM bar |

@@ -21,6 +21,25 @@ export function formatReset(resetAt: Date | null, format: TimeFormat, now: numbe
   return format === 'absolute' ? clock : `${formatCountdown(remaining)}, ${clock}`;
 }
 
+/**
+ * The first monthly anniversary of `start` after `now`, in UTC; a 31st start renews on
+ * the last day of shorter months. An estimate: annual plans, plan changes, and
+ * cancellations aren't recorded locally.
+ */
+export function nextMonthlyRenewal(start: Date, now: number): Date {
+  const day = start.getUTCDate();
+  const at = (months: number): Date => {
+    const year = start.getUTCFullYear();
+    const month = start.getUTCMonth() + months;
+    const lastDay = new Date(Date.UTC(year, month + 1, 0)).getUTCDate();
+    return new Date(Date.UTC(year, month, Math.min(day, lastDay), start.getUTCHours(), start.getUTCMinutes(), start.getUTCSeconds()));
+  };
+  const today = new Date(now);
+  let months = Math.max(1, (today.getUTCFullYear() - start.getUTCFullYear()) * 12 + today.getUTCMonth() - start.getUTCMonth());
+  while (at(months).getTime() <= now) months++;
+  return at(months);
+}
+
 /** `45s ago`, `2h 5m ago`, `3d 4h ago`. */
 export function formatAgo(ms: number): string {
   if (ms < 0) return t('format.justNow');

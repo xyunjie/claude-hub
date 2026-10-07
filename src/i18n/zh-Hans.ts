@@ -29,6 +29,7 @@ export const zhHans: Messages = {
   'status.expired': '已过期',
   'format.resets': '重置于',
   'format.resetsIn': '剩余',
+  'format.renews': '续费',
   'format.at': '{time}',
   'format.until': '至 {time}',
   'format.in': '输入',

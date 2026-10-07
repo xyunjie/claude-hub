@@ -9,7 +9,7 @@ import { contextRole, usageRole, RESET } from './colors.js';
 import type { Frame } from './frame.js';
 import { expandedLines } from './layouts.js';
 import {
-  authSegment, customSegment, extraSegment, formatProjectPath, linesSegment, sessionNameSegment, speedSegment, versionSegment,
+  customSegment, extraSegment, formatProjectPath, linesSegment, planText, sessionNameSegment, speedSegment, versionSegment,
 } from './parts.js';
 import { styledEffort, styledModel } from './model-style.js';
 import { fitRow, segment, type Segment } from './segments.js';
@@ -67,7 +67,7 @@ function projectPart(f: Frame): Segment | null {
 function identityRow(f: Frame): string[] {
   const segments = [
     customSegment(f, 'first'), modelPart(f), projectPart(f), sessionNameSegment(f), versionSegment(f),
-    extraSegment(f), linesSegment(f), speedSegment(f), authSegment(f), customSegment(f, 'last'),
+    extraSegment(f), linesSegment(f), speedSegment(f), customSegment(f, 'last'),
   ].filter((s): s is Segment => s !== null);
   return fitRow(f, segments, f.width);
 }
@@ -168,6 +168,12 @@ function timeCell(f: Frame): TextCell | null {
   return elapsed ? { kind: 'text', text: `${f.paint.label(t('short.time'))} ${f.paint.duration(elapsed.replace(/ /g, ''))}`, priority: 2 } : null;
 }
 
+/** `Max 20x · renews ~23d`: the plan sits beside the limits it sets. */
+function planCell(f: Frame): TextCell | null {
+  const text = planText(f, true);
+  return text ? { kind: 'text', text: f.paint.label(text), priority: 2 } : null;
+}
+
 function metricRows(f: Frame): Cell[][] {
   const d = f.config.display;
   const order = f.config.elementOrder;
@@ -180,7 +186,7 @@ function metricRows(f: Frame): Cell[][] {
     if (usage.fiveHour !== null) second.push(windowCell(f, '5h', usage.fiveHour, usage.fiveHourResetAt, FIVE_HOUR_MS, 1));
     if (usage.sevenDay !== null) second.push(windowCell(f, '7d', usage.sevenDay, usage.sevenDayResetAt, SEVEN_DAY_MS, 1));
   }
-  second.push(timeCell(f));
+  second.push(timeCell(f), planCell(f));
   for (const row of [first, second]) {
     const cells = row.filter((cell): cell is Cell => cell !== null);
     if (cells.length > 0) rows.push(cells);

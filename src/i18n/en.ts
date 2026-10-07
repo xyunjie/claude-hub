@@ -27,6 +27,7 @@ export const en = {
   'status.expired': 'expired',
   'format.resets': 'resets',
   'format.resetsIn': 'resets in',
+  'format.renews': 'renews',
   'format.at': 'at {time}',
   'format.until': 'until {time}',
   'format.in': 'in',

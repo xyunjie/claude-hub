@@ -89,6 +89,7 @@ export const DEFAULT_CONFIG = {
         showClaudeCodeVersion: false,
         showAuth: false,
         showAuthUser: false,
+        showRenewal: false,
         showConfigCounts: false,
         showOutputStyle: false,
         showPromptCache: false,

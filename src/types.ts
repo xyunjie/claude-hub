@@ -167,4 +167,6 @@ export interface CostTotals {
 export interface AuthInfo {
   method: string | null;
   user: string | null;
+  /** When the current subscription started; renewals fall on its monthly anniversary. */
+  subscribedAt: Date | null;
 }

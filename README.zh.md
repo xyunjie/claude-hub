@@ -21,7 +21,7 @@ ctx ━━━━━━━━━─── 72% 144k/200k     │ tok ↑1.7M ↓28
 
 | `style` | 效果（unicode 图标） |
 |---|---|
-| `dashboard`（默认） | 身份行（`◆ 模型 强度 │ owner/repo ⎇ 分支 ✓`）加对齐的指标网格：`ctx`/`5h`/`7d` 渐变粗线进度条（细十字 `┼` 标出均速位置）、灰色细节和用量推算、`tok ↑输入 ↓输出 cache %`、`cost`、`time`。窄屏时先隐藏 `tok`，再把费用和时长挪到进度条右侧 |
+| `dashboard`（默认） | 身份行（`◆ 模型 强度 │ owner/repo ⎇ 分支 ✓`）加对齐的指标网格：`ctx`/`5h`/`7d` 渐变粗线进度条（细十字 `┼` 标出均速位置）、灰色细节和用量推算、`tok ↑输入 ↓输出 cache %`、`cost`、`time` 及订阅套餐与预计续费（`showAuth`、`showRenewal`）。窄屏时先隐藏 `tok`，再把费用和时长挪到进度条右侧 |
 | `lean` | `[Opus 5.5] │ app git:(main*) │ ⏱ 1h 13m │ $2.48` |
 | `powerline` | 彩色色块；`icons: "nerd"` 时用 `` 箭头相连 |
 | `capsule` | 每段一个彩色胶囊；`icons: "nerd"` 时两端为圆角 |
@@ -103,6 +103,8 @@ node scripts/setup.mjs import-hud         # 可选：导入 claude-hud 的显示
 | `display.showDuration` / `showCost` | `true` | 会话时长 / 费用 |
 | `display.showDailyCost` / `showWeeklyCost` | `false` | 今日 / 本周所有会话总花费 |
 | `display.showLinesChanged` | `false` | 本次会话增删行数 |
+| `display.showAuth` / `showAuthUser` | `false` | 订阅套餐（Pro / Max 5x / Max 20x）/ 账号；dashboard 中显示在用量行 |
+| `display.showRenewal` | `false` | `续费 ~23d`：距订阅开始日下一个月度周年日的天数。仅为估算，本地不记录年付、换套餐或取消 |
 | `display.usagePace` | `true` | 按当前速度推算：进度条中标出均速应到位置，`→76%` 为重置时的预计用量（90% 起变黄，超过 100% 变红），`▲38m` 为预计多久撞上限额 |
 | `display.modelColors` | `true` | 按模型着色（Fable 带 `✦` 流光渐变、Opus 主色、Sonnet 低调灰、Haiku 浅色），思考等级按强度着色（low 灰、medium 蓝、high 绿、xhigh 橙、max 粗体红、ultracode 流光） |
 | `display.showTools` / `showAgents` / `showTodos` | `false` | 活动行 |

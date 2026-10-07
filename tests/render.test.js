@@ -6,6 +6,7 @@ import { renderLines } from '../dist/render/index.js';
 import { stripAnsi, visibleWidth, wrapToWidth } from '../dist/render/ansi.js';
 import { timeToLimit, usagePace } from '../dist/render/bars.js';
 import { shortModel } from '../dist/render/activity.js';
+import { nextMonthlyRenewal } from '../dist/render/time.js';
 
 const NOW = Date.UTC(2026, 9, 2, 12, 0, 0);
 const empty = { tools: [], skills: [], mcpServers: [], mcpErrors: [], agents: [], todos: [] };
@@ -189,6 +190,38 @@ test('dashboard: identity row and an aligned metrics grid', () => {
   assert.equal(lines[2], '5h  ──────────── 2%  ↻4h29m │ 7d  ━━━━━━━━──── 69% ↻2d1h │ time 1h5m');
   // The separators line up.
   assert.equal(lines[1].indexOf('│'), lines[2].indexOf('│'));
+});
+
+test('dashboard: the plan sits on the usage row, not the identity row', () => {
+  const auth = { method: 'Claude Max 20x', user: 'alice' };
+  const lines = render(dashStdin, { style: 'dashboard', display: { showAuth: true } }, { ...dashUsage, auth }, 160).map(plainText);
+  assert.ok(!lines[0].includes('Max'));
+  assert.match(lines[2], /│ time 1h5m +│ Max 20x$/);
+  const withUser = render(dashStdin, { style: 'dashboard', display: { showAuth: true, showAuthUser: true } }, { ...dashUsage, auth }, 160).map(plainText);
+  assert.match(withUser[2], /│ Max 20x · alice$/);
+});
+
+test('renewal: the next monthly anniversary, clamped to short months', () => {
+  const at = (start, now) => nextMonthlyRenewal(new Date(start), Date.parse(now)).toISOString();
+  assert.equal(at('2026-10-07T07:51:00Z', '2026-10-07T12:00:00Z'), '2026-11-07T07:51:00.000Z');
+  assert.equal(at('2026-10-07T07:51:00Z', '2026-11-07T07:51:00Z'), '2026-12-07T07:51:00.000Z');
+  assert.equal(at('2026-01-31T00:00:00Z', '2026-02-01T00:00:00Z'), '2026-02-28T00:00:00.000Z');
+  assert.equal(at('2025-12-15T00:00:00Z', '2026-10-02T12:00:00Z'), '2026-10-15T00:00:00.000Z');
+});
+
+test('renewal: days left beside the plan, hours on the last day', () => {
+  // Subscribed one calendar month before the renewal that lands `ms` from now.
+  const auth = (ms) => {
+    const renewal = new Date(NOW + ms);
+    renewal.setUTCMonth(renewal.getUTCMonth() - 1);
+    return { method: 'Claude Pro', user: null, subscribedAt: renewal };
+  };
+  const row = (ms, config = {}) => render(dashStdin, { style: 'dashboard', display: { showAuth: true, showRenewal: true }, ...config },
+    { ...dashUsage, auth: auth(ms) }, 160).map(plainText)[2];
+  assert.match(row(9 * 86_400_000 + 3600_000), /│ Pro · renews ~10d$/);
+  assert.match(row(5 * 3600_000), /│ Pro · renews ~5h$/);
+  assert.match(render(base, { display: { showRenewal: true } }, { auth: auth(3 * 86_400_000) })[0], /│ renews ~3d$/);
+  assert.match(row(10 * 86_400_000, { language: 'zh' }), /Pro · 续费 ~10d$/);
 });
 
 test('dashboard: narrow terminals drop the token cell, then move text cells beside the bars', () => {

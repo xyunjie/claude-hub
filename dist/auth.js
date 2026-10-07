@@ -6,10 +6,10 @@ const hasApiKey = (env) => !!env.ANTHROPIC_API_KEY?.trim();
 export function deriveAuthInfo(claudeJson, env = process.env) {
     // ANTHROPIC_API_KEY wins at runtime even when an old oauthAccount remains.
     if (hasApiKey(env))
-        return { method: 'API Key', user: null };
+        return { method: 'API Key', user: null, subscribedAt: null };
     const account = claudeJson?.oauthAccount;
     if (!account || typeof account !== 'object')
-        return { method: null, user: null };
+        return { method: null, user: null, subscribedAt: null };
     let method = null;
     const orgType = cleanText(account.organizationType, 64);
     if (orgType) {
@@ -20,16 +20,21 @@ export function deriveAuthInfo(claudeJson, env = process.env) {
             method += ` ${tier}`;
     }
     const email = cleanText(account.emailAddress, 128);
-    return { method, user: email ? email.split('@')[0] : cleanText(account.displayName, 64) ?? null };
+    const started = typeof account.subscriptionCreatedAt === 'string' ? new Date(account.subscriptionCreatedAt) : null;
+    return {
+        method,
+        user: email ? email.split('@')[0] : cleanText(account.displayName, 64) ?? null,
+        subscribedAt: started && Number.isFinite(started.getTime()) ? started : null,
+    };
 }
 export function readAuthInfo() {
     if (hasApiKey(process.env))
-        return { method: 'API Key', user: null };
+        return { method: 'API Key', user: null, subscribedAt: null };
     try {
         return deriveAuthInfo(JSON.parse(fs.readFileSync(claudeJsonPath(), 'utf8')));
     }
     catch {
-        return { method: null, user: null };
+        return { method: null, user: null, subscribedAt: null };
     }
 }
 //# sourceMappingURL=auth.js.map

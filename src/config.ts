@@ -111,6 +111,7 @@ export interface HubConfig {
     showClaudeCodeVersion: boolean;
     showAuth: boolean;
     showAuthUser: boolean;
+    showRenewal: boolean;
     showConfigCounts: boolean;
     showOutputStyle: boolean;
     showPromptCache: boolean;
@@ -193,6 +194,7 @@ export const DEFAULT_CONFIG: HubConfig = {
     showClaudeCodeVersion: false,
     showAuth: false,
     showAuthUser: false,
+    showRenewal: false,
     showConfigCounts: false,
     showOutputStyle: false,
     showPromptCache: false,

@@ -7,7 +7,7 @@ import { textWidth, truncateToWidth, visibleWidth } from './ansi.js';
 import { FIVE_HOUR_MS, SEVEN_DAY_MS, elapsedShare, getContext, projectionText, usagePace } from './bars.js';
 import { contextRole, usageRole, RESET } from './colors.js';
 import { expandedLines } from './layouts.js';
-import { authSegment, customSegment, extraSegment, formatProjectPath, linesSegment, sessionNameSegment, speedSegment, versionSegment, } from './parts.js';
+import { customSegment, extraSegment, formatProjectPath, linesSegment, planText, sessionNameSegment, speedSegment, versionSegment, } from './parts.js';
 import { styledEffort, styledModel } from './model-style.js';
 import { fitRow, segment } from './segments.js';
 const BOLD = '\x1b[1m';
@@ -64,7 +64,7 @@ function projectPart(f) {
 function identityRow(f) {
     const segments = [
         customSegment(f, 'first'), modelPart(f), projectPart(f), sessionNameSegment(f), versionSegment(f),
-        extraSegment(f), linesSegment(f), speedSegment(f), authSegment(f), customSegment(f, 'last'),
+        extraSegment(f), linesSegment(f), speedSegment(f), customSegment(f, 'last'),
     ].filter((s) => s !== null);
     return fitRow(f, segments, f.width);
 }
@@ -139,6 +139,11 @@ function timeCell(f) {
     const elapsed = f.config.display.showDuration ? formatElapsed(f.stdin.cost?.total_duration_ms) : '';
     return elapsed ? { kind: 'text', text: `${f.paint.label(t('short.time'))} ${f.paint.duration(elapsed.replace(/ /g, ''))}`, priority: 2 } : null;
 }
+/** `Max 20x · renews ~23d`: the plan sits beside the limits it sets. */
+function planCell(f) {
+    const text = planText(f, true);
+    return text ? { kind: 'text', text: f.paint.label(text), priority: 2 } : null;
+}
 function metricRows(f) {
     const d = f.config.display;
     const order = f.config.elementOrder;
@@ -152,7 +157,7 @@ function metricRows(f) {
         if (usage.sevenDay !== null)
             second.push(windowCell(f, '7d', usage.sevenDay, usage.sevenDayResetAt, SEVEN_DAY_MS, 1));
     }
-    second.push(timeCell(f));
+    second.push(timeCell(f), planCell(f));
     for (const row of [first, second]) {
         const cells = row.filter((cell) => cell !== null);
         if (cells.length > 0)
