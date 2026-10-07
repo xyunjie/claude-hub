@@ -105,7 +105,7 @@ node scripts/setup.mjs import-hud         # 可选：导入 claude-hud 的显示
 | `display.showLinesChanged` | `false` | 本次会话增删行数 |
 | `display.showAuth` / `showAuthUser` | `false` | 订阅套餐（Pro / Max 5x / Max 20x）/ 账号；dashboard 中显示在用量行 |
 | `display.showRenewal` | `false` | `续费 ~23d`：距订阅开始日下一个月度周年日的天数。仅为估算，本地不记录年付、换套餐或取消 |
-| `display.usagePace` | `true` | 按当前速度推算：进度条中标出均速应到位置，`→76%` 为重置时的预计用量（90% 起变黄，超过 100% 变红），`▲38m` 为预计多久撞上限额 |
+| `display.usagePace` | `true` | 按当前速度推算：进度条中标出均速应到位置，`→76%` 为重置时的预计用量，窗口过五分之一（5h 中的 1h）后才显示（90% 起变黄，超过 100% 变红），`▲38m` 为预计多久撞上限额 |
 | `display.modelColors` | `true` | 按模型着色（Fable 带 `✦` 流光渐变、Opus 主色、Sonnet 低调灰、Haiku 浅色），思考等级按强度着色（low 灰、medium 蓝、high 绿、xhigh 橙、max 粗体红、ultracode 流光） |
 | `display.showTools` / `showAgents` / `showTodos` | `false` | 活动行 |
 | `colors.<角色>` | 主题值 | 颜色名、256 色序号或 `#rrggbb` |

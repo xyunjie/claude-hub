@@ -72,12 +72,13 @@ export function usagePace(percent, resetAt, windowMs, now) {
     return projected >= 90 ? 'warning' : 'normal';
 }
 /**
- * Where usage will be when the window resets, at the current rate. Null until 5% of the
- * window has passed, since earlier projections swing wildly.
+ * Where usage will be when the window resets, at the current rate. Null until a fifth of
+ * the window (1h of 5h) has passed: before that, each whole-percent step in usage swings
+ * the projection by more than 5 points.
  */
 export function projectedPercent(percent, resetAt, windowMs, now) {
     const elapsed = elapsedShare(resetAt, windowMs, now);
-    if (percent === null || elapsed === null || elapsed < 0.05)
+    if (percent === null || elapsed === null || elapsed < 0.2)
         return null;
     return Math.round(percent / elapsed);
 }

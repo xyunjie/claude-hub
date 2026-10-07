@@ -133,7 +133,7 @@ Run `/claude-hub:configure`, ask Claude ("use the nord theme", "show tool activi
 | `showUsage` | `true` | 5-hour and weekly limits (subscribers) |
 | `usageValue` | `percent` | `percent`, `remaining` |
 | `usageBarEnabled` / `usageCompact` | `true` / `false` | bars, or `5h: 25% (1h 30m)` |
-| `usagePace` | `true` | projects each window at its current rate: a marker in the bar where an even pace would be, `→76%` the usage expected at reset (dim, yellow from 90%, red over 100%), and `▲38m` how soon you'd hit the limit |
+| `usagePace` | `true` | projects each window at its current rate: a marker in the bar where an even pace would be, `→76%` the usage expected at reset, from the window's first fifth on (1h of 5h; dim, yellow from 90%, red over 100%), and `▲38m` how soon you'd hit the limit |
 | `modelColors` | `true` | color the model by family (Fable shimmers with a `✦`, Opus takes the accent, Sonnet is muted, Haiku light) and the effort by level (low gray, medium blue, high green, xhigh orange, max bold red, ultracode shimmering) |
 | `showResetLabel` | `true` | "resets in" wording |
 | `usageThreshold` | `0` | hide usage below this percent |

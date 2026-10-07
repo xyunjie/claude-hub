@@ -4,7 +4,7 @@ import { mergeConfig } from '../dist/config.js';
 import { setLanguage } from '../dist/i18n/index.js';
 import { renderLines } from '../dist/render/index.js';
 import { stripAnsi, visibleWidth, wrapToWidth } from '../dist/render/ansi.js';
-import { timeToLimit, usagePace } from '../dist/render/bars.js';
+import { projectedPercent, timeToLimit, usagePace } from '../dist/render/bars.js';
 import { shortModel } from '../dist/render/activity.js';
 import { nextMonthlyRenewal } from '../dist/render/time.js';
 
@@ -154,6 +154,9 @@ test('usage pace marker and limit forecast', () => {
   assert.match(row, /Usage █████▏██░░ 80% →160% ▲38m/);
   assert.equal(timeToLimit(80, new Date(NOW + 2.5 * 3600_000), 5 * 3600_000, NOW), 37.5 * 60_000);
   assert.equal(timeToLimit(20, new Date(NOW + 2.5 * 3600_000), 5 * 3600_000, NOW), null);
+  // No projection in the window's first fifth, where it swings with every percent.
+  assert.equal(projectedPercent(5, new Date(NOW + 4.75 * 3600_000), 5 * 3600_000, NOW), null);
+  assert.equal(projectedPercent(20, new Date(NOW + 4 * 3600_000), 5 * 3600_000, NOW), 100);
 });
 
 test('narrow terminals drop optional segments before wrapping', () => {
